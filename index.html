@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interaktive Datengeschichte: Tourismus in München und Südtirol im Vergleich – Übernachtungen, Saisonrhythmus, Corona-Einbruch, Gästeherkunft. Datenquellen: Open Data München und Open Data Südtirol.">
+  <meta name="color-scheme" content="light">
+  <title>Zwei Heimaten in Zahlen · München ↔ Südtirol</title>
+  <link rel="preload" href="assets/vendor/d3.v7.min.js" as="script">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏔️</text></svg>">
+  <meta property="og:title" content="Zwei Heimaten in Zahlen · München ↔ Südtirol">
+  <meta property="og:description" content="Oktoberfest-Gipfel gegen Doppelsaison: Der Tourismus zweier Sehnsuchtsorte im Datenvergleich – auf Basis offener Daten aus München und Südtirol.">
+  <meta property="og:type" content="website">
+</head>
+<body>
+
+  <!-- ======================= Navigation ======================= -->
+  <header class="site-nav" id="siteNav">
+    <a class="brand" href="#top">München&nbsp;↔&nbsp;Südtirol <span>in Zahlen</span></a>
+    <nav aria-label="Kapitel">
+      <a href="#kapitel-jahrzehnte">Jahrzehnte</a>
+      <a href="#kapitel-saison">Saison</a>
+      <a href="#kapitel-corona">Corona</a>
+      <a href="#kapitel-herkunft">Herkunft</a>
+      <a href="#kapitel-aufenthalt">Aufenthalt</a>
+      <a href="#kapitel-explorer">Explorer</a>
+      <a href="#quellen">Quellen</a>
+    </nav>
+  </header>
+
+  <!-- ======================= Hero ======================= -->
+  <main id="top">
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="blob blob-a"></div>
+        <div class="blob blob-b"></div>
+      </div>
+      <div class="hero-inner">
+        <p class="kicker">Eine Datengeschichte · Open Data München × Open Data Südtirol</p>
+        <h1>Zwei Heimaten<br><em>in Zahlen</em></h1>
+        <p class="lede">
+          Die eine Heimat ist eine Millionenstadt mit dem größten Volksfest der Welt,
+          die andere ein Alpenland zwischen Weinbergen und Dreitausendern. Beide leben
+          vom Reisen – aber völlig unterschiedlich. Die offenen Datenportale
+          <strong>Münchens</strong> und <strong>Südtirols</strong> zeigen, wie sehr
+          sich Städtetrip und Bergurlaub im Rhythmus, in der Herkunft der Gäste und in
+          der Verweildauer unterscheiden – und was Corona mit beiden gemacht hat.
+        </p>
+
+        <div class="kpi-grid" id="kpiGrid" aria-live="polite">
+          <div class="kpi"><span class="kpi-value" data-kpi="stOvernights">–</span><span class="kpi-label">Übernachtungen Südtirol*</span></div>
+          <div class="kpi"><span class="kpi-value" data-kpi="mucOvernights">–</span><span class="kpi-label">Übernachtungen München*</span></div>
+          <div class="kpi"><span class="kpi-value" data-kpi="factor">–</span><span class="kpi-label">Südtirol im Verhältnis zu München</span></div>
+          <div class="kpi"><span class="kpi-value" data-kpi="years">–</span><span class="kpi-label">Jahre Datenabdeckung</span></div>
+        </div>
+        <p class="kpi-footnote" id="kpiFootnote"></p>
+
+        <p class="hero-status" id="dataStatus" role="status">Lade Daten von beiden Open-Data-Portalen&nbsp;…</p>
+        <a class="scroll-hint" href="#kapitel-jahrzehnte" aria-label="Zur ersten Grafik scrollen">↓</a>
+      </div>
+    </section>
+
+    <!-- ======================= Fehlerzustand ======================= -->
+    <section class="error-panel" id="errorPanel" hidden>
+      <h2>Daten konnten nicht geladen werden</h2>
+      <p>
+        Weder die Live-Daten der beiden Open-Data-Portale noch die Daten-Snapshots
+        in diesem Repository waren erreichbar.
+      </p>
+      <p>
+        Die Datensätze gibt es hier im Original:<br>
+        <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">
+          opendata.muenchen.de → Monatszahlen Tourismus
+        </a><br>
+        <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">
+          data.civis.bz.it → Tourismus-Datensätze
+        </a>
+      </p>
+      <p class="error-detail" id="errorDetail"></p>
+    </section>
+
+    <!-- ======================= Teilausfall-Hinweis ======================= -->
+    <section class="error-panel" id="partialNote" hidden>
+      <h2>Eine Region fehlt gerade</h2>
+      <p></p>
+    </section>
+
+    <div id="storyRoot">
+
+      <!-- ======================= Kapitel 1: Jahrzehnte ======================= -->
+      <section class="chapter" id="kapitel-jahrzehnte">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 1</p>
+          <h2>Das Land schlägt die Stadt – deutlich</h2>
+          <p class="chapter-lede" id="narrativeDecades">
+            München ist eine der meistbesuchten Städte Deutschlands. Und trotzdem
+            spielt Südtirol beim Übernachten in einer ganz anderen Liga: Das kleine
+            Land mit gut einer halben Million Einwohner:innen beherbergt Jahr für
+            Jahr ein Vielfaches der Münchner Gästenächte.
+          </p>
+        </div>
+        <figure class="chart-card reveal">
+          <figcaption>
+            <span class="chart-title">Tourismus pro Jahr im Vergleich</span>
+            <span class="chart-sub" id="subDecades"></span>
+          </figcaption>
+          <div class="metric-toggle" id="metricToggle" role="group" aria-label="Kennzahl wählen">
+            <button type="button" data-metric="overnights" class="active" aria-pressed="true">Übernachtungen</button>
+            <button type="button" data-metric="arrivals" aria-pressed="false">Ankünfte</button>
+          </div>
+          <div class="chart" id="chartDecades" role="img" aria-label="Liniendiagramm: Übernachtungen bzw. Ankünfte pro Jahr in München und Südtirol im Vergleich"></div>
+          <div class="legend" id="legendDecades"></div>
+          <p class="chart-note" id="noteDecades"></p>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </figure>
+        <aside class="context-fact reveal">
+          <p class="context-kicker">Zum Einordnen</p>
+          <p>
+            Südtirol hat rund 0,5&nbsp;Millionen Einwohner:innen, München etwa
+            1,5&nbsp;Millionen. Pro Kopf gerechnet ist der Abstand also noch
+            dramatischer: Auf eine Südtirolerin kommen pro Jahr mehrere Dutzend
+            Gästenächte.
+            <span class="context-sources">Quellen:
+              <a href="https://de.wikipedia.org/wiki/S%C3%BCdtirol" rel="noopener">Wikipedia: Südtirol</a>,
+              <a href="https://de.wikipedia.org/wiki/M%C3%BCnchen" rel="noopener">Wikipedia: München</a>
+            </span>
+          </p>
+        </aside>
+      </section>
+
+      <!-- ======================= Kapitel 2: Saison ======================= -->
+      <section class="chapter" id="kapitel-saison">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 2</p>
+          <h2>Oktoberfest-Gipfel gegen Doppelsaison</h2>
+          <p class="chapter-lede" id="narrativeSeason">
+            Wann kommen die Gäste? Hier zeigen die beiden Heimaten ihren Charakter:
+            München hat einen markanten Spätsommer-Gipfel rund um die Wiesn,
+            Südtirol lebt vom doppelten Takt aus Skiwinter und Wandersommer –
+            mit tiefen Tälern dazwischen, wenn viele Betriebe schließen.
+          </p>
+        </div>
+        <figure class="chart-card reveal">
+          <figcaption>
+            <span class="chart-title">Saisonprofil: typischer Monatsanteil</span>
+            <span class="chart-sub" id="subSeason"></span>
+          </figcaption>
+          <div class="chart" id="chartSeason" role="img" aria-label="Liniendiagramm: mittlerer Anteil jedes Monats an den Übernachtungen eines Jahres, München und Südtirol im Vergleich"></div>
+          <div class="legend" id="legendSeason"></div>
+          <p class="chart-note" id="noteSeason"></p>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </figure>
+        <aside class="context-fact reveal">
+          <p class="context-kicker">Zum Einordnen</p>
+          <p>
+            Das Oktoberfest zieht in gut zwei Wochen jährlich um die sechs bis sieben
+            Millionen Besuche an – ein erheblicher Teil davon übernachtet in der Stadt
+            und prägt den Münchner September.
+            <span class="context-sources">Quellen:
+              <a href="https://de.wikipedia.org/wiki/Oktoberfest" rel="noopener">Wikipedia: Oktoberfest</a>,
+              <a href="https://www.muenchen.de/veranstaltungen/oktoberfest" rel="noopener">muenchen.de</a>
+            </span>
+          </p>
+        </aside>
+      </section>
+
+      <!-- ======================= Kapitel 3: Corona ======================= -->
+      <section class="chapter" id="kapitel-corona">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 3</p>
+          <h2>Der Absturz – und zwei verschiedene Erholungen</h2>
+          <p class="chapter-lede" id="narrativeCorona">
+            Im Frühjahr 2020 fiel der Tourismus in beiden Heimaten praktisch auf
+            null. Doch die Erholung verlief unterschiedlich: Ferienregionen mit
+            Auto-Anreise und Außenaktivitäten kamen schneller zurück als der
+            internationale Städte- und Messetourismus.
+          </p>
+        </div>
+        <figure class="chart-card chart-card-wide reveal">
+          <figcaption>
+            <span class="chart-title">Übernachtungen im Vergleich zu 2019</span>
+            <span class="chart-sub" id="subCorona"></span>
+          </figcaption>
+          <div class="chart chart-tall" id="chartCorona" role="img" aria-label="Liniendiagramm: monatliche Übernachtungen seit 2019 als Prozent des Niveaus von 2019, München und Südtirol"></div>
+          <div class="legend" id="legendCorona"></div>
+          <p class="chart-note" id="noteCorona"></p>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </figure>
+      </section>
+
+      <!-- ======================= Kapitel 4: Herkunft ======================= -->
+      <section class="chapter" id="kapitel-herkunft">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 4</p>
+          <h2>Wer kommt eigentlich?</h2>
+          <p class="chapter-lede" id="narrativeOrigin">
+            „Inland“ heißt in München Deutschland – in Südtirol Italien. Spannend
+            ist der Blick auf die Gäste aus dem Ausland: München lebt vom
+            internationalen Publikum aus aller Welt, Südtirols Ausland beginnt
+            schon am Brenner – allen voran mit Gästen aus Deutschland.
+          </p>
+        </div>
+        <figure class="chart-card reveal">
+          <figcaption>
+            <span class="chart-title">Auslandsanteil an den Übernachtungen</span>
+            <span class="chart-sub" id="subOrigin"></span>
+          </figcaption>
+          <div class="chart" id="chartOrigin" role="img" aria-label="Liniendiagramm: Anteil ausländischer Gäste an den Übernachtungen pro Jahr, München und Südtirol"></div>
+          <div class="legend" id="legendOrigin"></div>
+          <p class="chart-note" id="noteOrigin"></p>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </figure>
+      </section>
+
+      <!-- ======================= Kapitel 5: Aufenthalt ======================= -->
+      <section class="chapter" id="kapitel-aufenthalt">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 5</p>
+          <h2>Städtetrip oder richtiger Urlaub?</h2>
+          <p class="chapter-lede" id="narrativeStay">
+            Teilt man die Übernachtungen durch die Ankünfte, erhält man die mittlere
+            Aufenthaltsdauer. Sie erzählt vom Wesen einer Destination: das
+            Wochenende in der Stadt gegen die Urlaubswoche auf dem Berghof – auch
+            wenn die Aufenthalte überall langsam kürzer werden.
+          </p>
+        </div>
+        <figure class="chart-card reveal">
+          <figcaption>
+            <span class="chart-title">Mittlere Aufenthaltsdauer</span>
+            <span class="chart-sub" id="subStay"></span>
+          </figcaption>
+          <div class="chart" id="chartStay" role="img" aria-label="Liniendiagramm: durchschnittliche Übernachtungen je Gast pro Jahr, München und Südtirol"></div>
+          <div class="legend" id="legendStay"></div>
+          <p class="chart-note" id="noteStay"></p>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </figure>
+      </section>
+
+      <!-- ======================= Kapitel 6: Explorer ======================= -->
+      <section class="chapter" id="kapitel-explorer">
+        <div class="chapter-text reveal">
+          <p class="chapter-no">Kapitel 6</p>
+          <h2>Selbst erkunden</h2>
+          <p class="chapter-lede">
+            Alle Jahreswerte beider Regionen im Überblick – durchsuchbar und
+            sortierbar. Ein Klick auf eine Spaltenüberschrift sortiert die Tabelle.
+          </p>
+        </div>
+        <div class="chart-card reveal">
+          <div class="table-tools">
+            <input type="search" id="tableSearch" placeholder="Jahr oder Region suchen …" aria-label="Tabelle durchsuchen">
+            <span class="table-count" id="tableCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table id="dataTable" aria-label="Jahreswerte des Tourismus in München und Südtirol">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="source-note">Quellen:
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal München</a> ·
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Open Data Portal Südtirol</a>
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======================= Quellen & Methodik ======================= -->
+    <footer class="sources" id="quellen">
+      <h2>Quellen &amp; Methodik</h2>
+      <div class="sources-grid">
+        <div>
+          <h3>Datenquelle München</h3>
+          <p>
+            <strong id="datasetTitleMuc">„Monatszahlen Tourismus“</strong><br>
+            Herausgeber: Statistisches Amt der Landeshauptstadt München<br>
+            Bereitgestellt über das
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Open Data Portal der Landeshauptstadt München</a>.
+          </p>
+          <p id="licenseInfoMuc">
+            Lizenz und Nutzungsbedingungen: siehe Angaben auf der
+            <a href="https://opendata.muenchen.de/dataset/monatszahlen-tourismus" rel="noopener">Datensatzseite</a>.
+          </p>
+          <p id="freshnessInfoMuc" class="muted"></p>
+          <h3>Datenquelle Südtirol</h3>
+          <p>
+            <strong id="datasetTitleSt">Tourismus-Datensatz des Landesinstituts für Statistik (ASTAT)</strong><br>
+            Herausgeber: Autonome Provinz Bozen – Südtirol<br>
+            Bereitgestellt über das
+            <a href="https://data.civis.bz.it" rel="noopener">Open Data Portal Südtirol (data.civis.bz.it)</a>.
+            Der konkrete Datensatz wird beim Laden der Seite über die CKAN-Suche des
+            Portals ermittelt und unten unter „Lizenz“ ausgewiesen.
+          </p>
+          <p id="licenseInfoSt">
+            Lizenz und Nutzungsbedingungen: siehe Angaben auf der
+            <a href="https://data.civis.bz.it/de/dataset?q=tourismus" rel="noopener">Datensatzseite</a>.
+          </p>
+          <p id="freshnessInfoSt" class="muted"></p>
+        </div>
+        <div>
+          <h3>Methodik</h3>
+          <p>
+            Die Daten werden beim Aufruf dieser Seite direkt aus den beiden Open-Data-
+            Portalen geladen (CKAN-API bzw. CSV) und ausschließlich in Ihrem Browser
+            verarbeitet. Alle Kennzahlen stammen unverändert aus den Datensätzen;
+            fehlende Werte werden ausgelassen und nicht geschätzt. Jahressummen werden
+            nur aus vollständigen Jahren (12 Monatswerte) gebildet; das laufende Jahr
+            bleibt außen vor.
+          </p>
+          <p>
+            <strong>Wichtig zum Vergleich:</strong> Verglichen wird die Stadt München
+            mit dem Land Südtirol – zwei unterschiedlich große Gebiete. Es geht nicht
+            um „besser oder schlechter“, sondern um die unterschiedlichen Muster von
+            Städte- und Ferientourismus. „Inland“ bezieht sich je Region auf das
+            eigene Land (Deutschland bzw. Italien). Liefert die Südtiroler Quelle nur
+            Jahres- statt Monatswerte, weisen die betroffenen Kapitel das aus.
+          </p>
+          <p>
+            Erstellt mit <a href="https://d3js.org" rel="noopener">D3.js</a> (ISC-Lizenz).
+            Der Quellcode dieser Seite ist offen auf
+            <a href="https://github.com/mueller-andreas/muenchen-bozen" rel="noopener">GitHub</a> einsehbar.
+            Ein Schwesterprojekt erzählt die Geschichte der
+            <a href="https://mueller-andreas.github.io/messe-muenchen/" rel="noopener">Messe München in Zahlen</a>.
+          </p>
+        </div>
+      </div>
+      <p class="colophon">
+        Diese Seite ist ein unabhängiges Open-Data-Projekt und steht in keiner Verbindung
+        zur Landeshauptstadt München, zur Autonomen Provinz Bozen – Südtirol, zu ASTAT
+        oder zu IDM Südtirol.
+      </p>
+    </footer>
+  </main>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+  <script src="assets/vendor/d3.v7.min.js"></script>
+  <script src="assets/js/parse.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
